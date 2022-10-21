@@ -6,17 +6,32 @@
 
 class StripBS {
     public:
-        StripBS(uint8_t pin,  float brightness, int changingDelay, float k, bool useSerial);
+        StripBS(uint8_t pin,  float maxBrightness, int changingDelay, float k, bool useSerial);
         void tick();
         void printBrightness();
+        float getCurrentBrightness();
+        float getMaxBrightness();
+        bool getState();
+        bool hasChanges();
+        void toggleState();
+        void turnOn();
+        void turnOff();
+        void clearHasChanges();
+        
     private:
         byte _pin;
+        bool _state;
         bool _useSerial;
+        bool _hasChanges;
+        bool _brightnessEqualFlag;
         unsigned long _lastChange;
         unsigned long _previousPrintTime;
-        float _brightness;
+        unsigned long _brightnessEqualMillis;
+        float _maxBrightness;
+        float _targetBrightness;
         float _currentBrightness;
+        float _previousBrightness;
         byte _changingDelay;
-
+        
         float _k;
 };
