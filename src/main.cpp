@@ -1,10 +1,12 @@
 #include <Arduino.h>
-#include <EncoderBS.h>
 #include <StripBS.h>
 
-#define pinA D6
-#define pinB D7
-#define pinSw D8
+// #include <EncoderBS.h>
+
+// #define pinA D6
+// #define pinB D7
+// #define pinSw D8
+
 #define pinStrip D1
 #define useSerial true
 
@@ -12,7 +14,7 @@
 #define brightness 90
 #define changingDelay 15
 
-EncoderBS enc(pinA, pinB, pinSw, useSerial);
+// EncoderBS enc(pinA, pinB, pinSw, useSerial);
 StripBS ledStrip(pinStrip, brightness, changingDelay, k, useSerial);
 
 
@@ -21,8 +23,6 @@ void setup() {
 }
 
 void loop() {
+  // enc.tick();
   ledStrip.tick();
-  enc.tick();
-
-  
 }
