@@ -34,12 +34,14 @@ String getStateMessage(){
   float rawMaxBrightness = ledStrip.getMaxBrightness();
   float brightness100 = mapFloat(currentBrightness, 0, rawMaxBrightness, 0, 100);
   float targetBrightness100 = mapFloat(rawTargetBrightness, 0, rawMaxBrightness, 0, 100);
+  float maxBrightness100 = mapFloat(rawMaxBrightness, 0, 255, 0, 100);
   String message = "{\"ledstrip\":{\"state\":" + String(state) 
                     + ",\"brightness\":"+ brightness100 
                     + ",\"currentBrightness\":" + currentBrightness
                     + ",\"rawMaxBrightness\":" + rawMaxBrightness
                     + ",\"rawTargetBrightness\":" + rawTargetBrightness
                     + ",\"targetBrightness100\":" + targetBrightness100
+                    + ",\"maxBrightness100\":" + maxBrightness100
                     + "}}";
   return message;
 }
@@ -63,7 +65,12 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       int messageInt = message.substring(2).toInt();
       float maxBstrip = ledStrip.getMaxBrightness();
       float targetBrightness = mapFloat(messageInt, 0, 100, 0, maxBstrip);
-      ledStrip.setTargetBrightness(targetBrightness);
+      if (targetBrightness > 0){
+        if (!ledStrip.getState()) ledStrip.toggleState();
+        ledStrip.setTargetBrightness(targetBrightness);
+      } else {
+        ledStrip.turnOff();
+      }
 
       Serial.printf("Target brightness from slider: %d, mapped: %f.\n", messageInt, targetBrightness);
     }
@@ -72,11 +79,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       int messageInt = message.substring(2).toInt();
       int newMaxBrightness = map(messageInt, 0, 100, 0, 255);
       ledStrip.setMaxBrightness(newMaxBrightness);
-          
+         
       Serial.printf("Max brightness from slider: %d, mapped: %d.\n", messageInt, newMaxBrightness);
     }
-
-
   }
 }
 

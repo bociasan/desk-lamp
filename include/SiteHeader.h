@@ -71,6 +71,10 @@ body {
 --bg-value-color: rgba(15, 139, 141,1);
 }
 
+.range{
+    height: 120px;
+}
+
 .vertical-slider {
     transform: rotateZ(270deg) translateX(-30px);
     touch-action: none;
@@ -120,7 +124,9 @@ body {
     <div class="card">
       <h2>Ledstrip</h2>
       <p class="brightness">brightness: <span id="brightness">%BRIGHTNESS%</span></p>
-      <p class="switch"><input type="range" onchange="updateSliderPWM(this)" id="slider1" min="0" max="100" step="1" value ="0" class="slider"></p>
+      <div class="range">
+        <input class="vertical-slider" name="blur" id="blur" type="range" min="0" max="100" value="5" oninput="changeRange(this)" />
+      </div>      
       <p class="state">state: <span id="state">%STATE%</span></p>
                       
       <p class="switch">
@@ -130,9 +136,7 @@ body {
       
       <p><button id="button" class="button">Toggle</button></p>
 
-      <div class="range">
-        <input class="vertical-slider" name="blur" id="blur" type="range" min="0" max="100" value="5" oninput="changeRange(this)" />
-      </div>
+      
     </div>
   </div>
 <script>
@@ -167,7 +171,7 @@ body {
 
     document.getElementById('state').innerHTML = state;
     document.getElementById('brightness').innerHTML = Math.trunc(ledstrip.brightness) + '%';
-    document.getElementById("slider1").value = Math.trunc(ledstrip.brightness);
+    document.getElementById("slider2").value = Math.trunc(ledstrip.maxBrightness100);
 
     if (document.getElementById("blur").value != Math.trunc(ledstrip.targetBrightness100) && document.getElementById("blur") !== document.activeElement){
       document.getElementById("blur").style.backgroundImage = getSliderBgCss(Math.trunc(ledstrip.targetBrightness100));
