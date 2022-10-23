@@ -11,6 +11,10 @@ class StripBS {
         void printBrightness();
         float getCurrentBrightness();
         float getMaxBrightness();
+        float getTargetBrightness();
+        unsigned long getLastChange();
+        void setTargetBrightness(float brightness);
+        void setMaxBrightness(float maxBrightness);
         bool getState();
         bool hasChanges();
         void toggleState();

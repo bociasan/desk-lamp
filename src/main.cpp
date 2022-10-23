@@ -7,11 +7,11 @@
 // #define useSerial false
 
 #define k 0.02
-#define maxBrightness 90
 #define changingDelay 15
+#define maxBrightness 90
 
 StripBS ledStrip(pinStrip, maxBrightness, changingDelay, k, useSerial);
-bool needNotify = false;
+unsigned long lastChange = 0;
 
 String processor(const String& var){
   Serial.println(var);
@@ -23,35 +23,60 @@ String processor(const String& var){
       return "OFF";
     }
   }
-  return String();
+  // return String("???");
+  return var;
 }
 
 String getStateMessage(){
   bool state = ledStrip.getState();
-  float rawBrightness = ledStrip.getCurrentBrightness();
-  float brightness = trunc(rawBrightness*100/maxBrightness);
-  String message = "{\"ledstrip\":{\"state\":" + String(state) + ",\"brightness\":" + brightness+ ",\"rawBrightness\":" + rawBrightness+"}}";
+  float currentBrightness = ledStrip.getCurrentBrightness();
+  float rawTargetBrightness = ledStrip.getTargetBrightness();
+  float rawMaxBrightness = ledStrip.getMaxBrightness();
+  float brightness100 = mapFloat(currentBrightness, 0, rawMaxBrightness, 0, 100);
+  float targetBrightness100 = mapFloat(rawTargetBrightness, 0, rawMaxBrightness, 0, 100);
+  String message = "{\"ledstrip\":{\"state\":" + String(state) 
+                    + ",\"brightness\":"+ brightness100 
+                    + ",\"currentBrightness\":" + currentBrightness
+                    + ",\"rawMaxBrightness\":" + rawMaxBrightness
+                    + ",\"rawTargetBrightness\":" + rawTargetBrightness
+                    + ",\"targetBrightness100\":" + targetBrightness100
+                    + "}}";
   return message;
 }
 
 void notifyClients() {
-  // bool state = ledStrip.getState();
-  // float rawBrightness = ledStrip.getCurrentBrightness();
-  // float brightness = trunc(rawBrightness*100/maxBrightness);
-  // String message = "{\"ledstrip\":{\"state\":" + String(state) + ",\"brightness\":" + brightness+ ",\"rawBrightness\":" + rawBrightness+"}}";
-
-  ws.textAll(getStateMessage());
+  String message = getStateMessage();
+  ws.textAll(message);
   ledStrip.clearHasChanges();
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
+  String message = (char*)data;
   AwsFrameInfo *info = (AwsFrameInfo*)arg;
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
     data[len] = 0;
     if (strcmp((char*)data, "toggle") == 0) {
       ledStrip.toggleState();
-      notifyClients();
     }
+
+    if (message.indexOf("1s") >= 0) {
+      int messageInt = message.substring(2).toInt();
+      float maxBstrip = ledStrip.getMaxBrightness();
+      float targetBrightness = mapFloat(messageInt, 0, 100, 0, maxBstrip);
+      ledStrip.setTargetBrightness(targetBrightness);
+
+      Serial.printf("Target brightness from slider: %d, mapped: %f.\n", messageInt, targetBrightness);
+    }
+
+    if (message.indexOf("2s") >= 0) {
+      int messageInt = message.substring(2).toInt();
+      int newMaxBrightness = map(messageInt, 0, 100, 0, 255);
+      ledStrip.setMaxBrightness(newMaxBrightness);
+          
+      Serial.printf("Max brightness from slider: %d, mapped: %d.\n", messageInt, newMaxBrightness);
+    }
+
+
   }
 }
 
@@ -60,7 +85,6 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
     switch (type) {
       case WS_EVT_CONNECT:
         Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-        // String message = getStateMessage();
         ws.text(client->id(), getStateMessage());
         break;
       case WS_EVT_DISCONNECT:
@@ -99,7 +123,8 @@ void setup() {
 
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/html", index_html, processor);
+    // request->send_P(200, "text/html", index_html, processor);
+    request->send_P(200, "text/html", index_html);
   });
 
   // Start server
@@ -118,9 +143,10 @@ void loop() {
   ws.cleanupClients();
 
   if(ledStrip.hasChanges()){
-    if (ws.count() > 0){
+    EVERY_MS(100){
+      if (ws.count() > 0){
       notifyClients();
+      }
     }
   }
 }
-

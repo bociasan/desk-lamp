@@ -15,11 +15,12 @@ StripBS::StripBS(uint8_t pin = NO_PIN, float maxBrightness = DEFAULT_BRIGHTNESS,
 }
 
 void StripBS::tick(){
-    if (millis() - _lastChange > _changingDelay){
+    // if (millis() - _lastChange > _changingDelay){
+    if ((abs(_currentBrightness - _targetBrightness) > 0.001) && (millis() - _lastChange > _changingDelay)){
         _lastChange = millis();
         _currentBrightness += (_targetBrightness - _currentBrightness) * _k;
 
-        if (abs(_currentBrightness - _targetBrightness) > 0.001){
+        // if (abs(_currentBrightness - _targetBrightness) > 0.001){
             if (_brightnessEqualFlag ){
                 if (millis() - _brightnessEqualMillis > _changingDelay){
                     _brightnessEqualFlag = false;
@@ -36,10 +37,10 @@ void StripBS::tick(){
             //
             analogWrite(_pin, _currentBrightness);
             _previousBrightness = _currentBrightness;
-            printBrightness();
+            //printBrightness();
             _hasChanges = true;
             //
-        }
+        // }
 
         //mutate de aici
 
@@ -48,11 +49,11 @@ void StripBS::tick(){
 }
 
 void StripBS::printBrightness(){
-    if (_useSerial && (millis() - _previousPrintTime > 100) && (abs(_currentBrightness - _targetBrightness) > 0.1)){
-        _previousPrintTime = millis();
+    // if (_useSerial && (millis() - _previousPrintTime > 100) && (abs(_currentBrightness - _targetBrightness) > 0.1)){
+    //     _previousPrintTime = millis();
         Serial.print("Current strip brightness: ");
         Serial.println(_currentBrightness);
-    }
+    // }
 }
 
 bool StripBS::getState(){
@@ -93,4 +94,34 @@ bool StripBS::hasChanges(){
 
 void StripBS::clearHasChanges(){
     _hasChanges = false;
+}
+
+unsigned long StripBS::getLastChange(){
+    return _lastChange;
+}
+
+float StripBS::getTargetBrightness(){
+    return _targetBrightness;
+}
+
+void StripBS::setTargetBrightness(float brightness){
+    if (brightness <= _maxBrightness){
+        _targetBrightness = brightness;
+    } else {
+        Serial.printf("TargetBrightness %f is bigger than _maxBrightness %f\n", brightness, _maxBrightness);
+    }
+}
+
+void StripBS::setMaxBrightness(float maxBrightness){
+    if (maxBrightness < 256){
+        float newTargetBrightness = mapFloat(_targetBrightness, 0, _maxBrightness, 0, maxBrightness);
+        newTargetBrightness = trunc(newTargetBrightness);
+        _maxBrightness = maxBrightness;
+        Serial.printf("NTB %f = mapFloat(%f, %f, %f)\n", newTargetBrightness, _targetBrightness, _maxBrightness, maxBrightness);
+
+        setTargetBrightness(newTargetBrightness);
+    } else{
+
+        Serial.printf("MaxBright is bigger than 255! | %f\n", maxBrightness);
+    }
 }
