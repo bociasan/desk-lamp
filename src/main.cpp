@@ -2,6 +2,7 @@
 #include <StripBS.h>
 #include <ServerHeader.h>
 
+#define DEVICE_ABOUT_JSON "{\"about\":{\"name\":\"" + device_name + "\", \"version\":\""+ device_version +"\"}}"
 #define pinStrip D1
 #define useSerial true
 // #define useSerial false
@@ -113,7 +114,8 @@ void initWebSocket() {
 
 void setup() {
   Serial.begin(115200);
-
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.hostname(device_name.c_str());
   WiFi.begin(ssid, password);
   Serial.print("Connecting to WiFi...");
   while (WiFi.status() != WL_CONNECTED) {
@@ -130,6 +132,10 @@ void setup() {
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     // request->send_P(200, "text/html", index_html, processor);
     request->send_P(200, "text/html", index_html);
+  });
+  
+  server.on("/device-about", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/json", "{\"name\": \"Hello world\"}");
   });
 
   // Start server
