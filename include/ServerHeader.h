@@ -3,10 +3,6 @@
 #include <ESPAsyncWebServer.h>
 #include <SiteHeader.h>
 
-const char* ssid = "Anonymus";
-const char* password = "camera18";
-// const char* ssid = "Alexandru's Galaxy S21+ 5G";
-// const char* password = "btyo7331";
 
 String device_version = "v1.1";
 String device_name = "Wemos-Smart-Lamp";
