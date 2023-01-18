@@ -123,16 +123,20 @@ void initWebSocket() {
 
 void startWiFi()
 {                              // Start a Wi-Fi access point, and try to connect to some given access points. Then wait for either an AP or STA connection
-  WiFi.softAP(ssid, password); // Start the access point
-  Serial.print("Access Point \"");
-  Serial.print(ssid);
-  Serial.println("\" started\r\n");
+  WiFi.mode(WIFI_STA);
+  // WiFi.mode(WIFI_AP_STA);
+  WiFi.hostname(device_name.c_str());
+  //WiFi.softAP(ssid, password); // Start the access point
+  // Serial.print("Access Point \"");
+  // Serial.print(ssid);
+  // Serial.println("\" started\r\n");
+
 
   wifiMulti.addAP(ANONYMUS_SSID, ANONYMUS_PSWD); // add Wi-Fi networks you want to connect to
   wifiMulti.addAP(BEAMLOGIC_SSID, BEAMLOGIC_PSWD);
   wifiMulti.addAP(PROIECT_SCR_SSID, PROIECT_SCR_PSWD);
   // wifiMulti.addAP("ssid_from_AP_3", "your_password_for_AP_3");
-
+    
   Serial.println("Connecting");
   while (wifiMulti.run() != WL_CONNECTED && WiFi.softAPgetStationNum() < 1)
   { // Wait for the Wi-Fi to connect
