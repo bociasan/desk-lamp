@@ -3,7 +3,7 @@
 #include <ServerHeader.h>
 #include <credentials.h>
 #include <ESP8266WiFiMulti.h>
-
+#include <ESP8266mDNS.h>
 
 #define pinStrip D1
 #define useSerial true
@@ -18,6 +18,15 @@ const char *password = LAMP_PSWD; // The password required to connect to it, lea
 #define k 0.02
 #define changingDelay 15
 #define maxBrightness 90
+
+float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
+    const float dividend = out_max - out_min;
+    const float divisor = in_max - in_min;
+    const float delta = x - in_min;
+
+    return (delta * dividend + (divisor / 2)) / divisor + out_min;
+}
+
 
 StripBS ledStrip(pinStrip, maxBrightness, changingDelay, k, useSerial);
 unsigned long lastChange = 0;
@@ -131,10 +140,10 @@ void startWiFi()
   // Serial.print(ssid);
   // Serial.println("\" started\r\n");
 
-
+  wifiMulti.addAP(LAMP_SSID, LAMP_PSWD);
   wifiMulti.addAP(ANONYMUS_SSID, ANONYMUS_PSWD); // add Wi-Fi networks you want to connect to
-  wifiMulti.addAP(BEAMLOGIC_SSID, BEAMLOGIC_PSWD);
   wifiMulti.addAP(PROIECT_SCR_SSID, PROIECT_SCR_PSWD);
+
   // wifiMulti.addAP("ssid_from_AP_3", "your_password_for_AP_3");
     
   Serial.println("Connecting");
@@ -156,6 +165,11 @@ void startWiFi()
     Serial.print("Station connected to ESP8266 AP");
   }
   Serial.println("\r\n");
+
+  if (!MDNS.begin("mylamp")) {             // Start the mDNS responder for mylamp.local
+    Serial.println("Error setting up MDNS responder!");
+  }
+  Serial.println("mDNS responder started");
 }
 
 void setup() {
@@ -177,6 +191,7 @@ void setup() {
 
   // Start server
   server.begin();
+
 }
 
 #define EVERY_MS(x) \
@@ -187,9 +202,8 @@ void setup() {
 
 void loop() {
   ledStrip.tick();
-
+  MDNS.update();
   ws.cleanupClients();
-
   if(ledStrip.hasChanges()){
     EVERY_MS(100){
       if (ws.count() > 0){
