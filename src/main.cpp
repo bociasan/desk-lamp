@@ -141,7 +141,7 @@ void startWiFi()
   // Serial.println("\" started\r\n");
 
   wifiMulti.addAP(LAMP_SSID, LAMP_PSWD);
-  wifiMulti.addAP(ANONYMUS_SSID, ANONYMUS_PSWD); // add Wi-Fi networks you want to connect to
+  // wifiMulti.addAP(ANONYMUS_SSID, ANONYMUS_PSWD); // add Wi-Fi networks you want to connect to
   wifiMulti.addAP(PROIECT_SCR_SSID, PROIECT_SCR_PSWD);
 
   // wifiMulti.addAP("ssid_from_AP_3", "your_password_for_AP_3");
